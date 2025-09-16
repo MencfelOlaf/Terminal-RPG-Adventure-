@@ -1,0 +1,263 @@
+import random
+import time
+import os
+
+SAVE_FILE = "savegame.txt"
+
+# Hero stats
+hero_name = ""
+hero_class = ""
+hero_hp = 0
+hero_attack = 0
+hero_defense = 0
+upgrade_points = 0
+gold = 5  # Start with 5 gold
+
+# Enemies
+enemies = [
+    {"name": "George", "hp": 15, "attack": 5, "gold": 3},
+    {"name": "Slime", "hp": 10, "attack": 3, "gold": 2},
+    {"name": "Goblin", "hp": 20, "attack": 6, "gold": 4},
+    {"name": "Bandit", "hp": 18, "attack": 7, "gold": 4},
+    {"name": "Wolf", "hp": 25, "attack": 8, "gold": 5},
+]
+
+boss = {"name": "Dragon", "hp": 50, "attack": 15, "gold": 15}
+
+# Weapons shop
+shop_items = [
+    {"name": "Iron Sword", "attack": 3, "price": 10},
+    {"name": "Steel Sword", "attack": 5, "price": 20},
+    {"name": "Magic Staff", "attack": 7, "price": 30},
+]
+
+# Colors
+RED = "\033[31m"
+GREEN = "\033[32m"
+BLUE = "\033[34m"
+YELLOW = "\033[33m"
+MAGENTA = "\033[35m"
+CYAN = "\033[36m"
+RESET = "\033[0m"
+
+def clear_screen():
+    os.system("clear")
+
+def save_game():
+    with open(SAVE_FILE, "w") as file:
+        file.write(f"{hero_name},{hero_class},{hero_hp},{hero_attack},{hero_defense},{upgrade_points},{gold}")
+    print(f"{GREEN}Game saved!{RESET}")
+
+def load_game():
+    global hero_name, hero_class, hero_hp, hero_attack, hero_defense, upgrade_points, gold
+    if os.path.exists(SAVE_FILE):
+        with open(SAVE_FILE, "r") as file:
+            data = file.read().split(",")
+            if len(data) == 7:
+                hero_name = data[0]
+                hero_class = data[1]
+                hero_hp = int(data[2])
+                hero_attack = int(data[3])
+                hero_defense = int(data[4])
+                upgrade_points = int(data[5])
+                gold = int(data[6])
+                print(f"{CYAN}Welcome back, {hero_name} the {hero_class}!{RESET}")
+                return True
+    return False
+
+def choose_class():
+    global hero_hp, hero_attack, hero_defense, hero_class
+    print(f"{MAGENTA}Choose your class:{RESET}")
+    print(f"{YELLOW}1. Wizard{RESET} (High attack, low HP, low defense)")
+    print(f"{YELLOW}2. Knight{RESET} (High HP, high defense, medium attack)")
+    print(f"{YELLOW}3. Elf{RESET} (Balanced HP and attack, medium defense)")
+    print(f"{YELLOW}4. Ranger{RESET} (High attack, medium HP, low defense)")
+    choice = input("Enter class number [1-4]: ")
+    if choice == "1":
+        hero_class = "Wizard"
+        hero_hp = 20
+        hero_attack = 12
+        hero_defense = 2
+    elif choice == "2":
+        hero_class = "Knight"
+        hero_hp = 35
+        hero_attack = 8
+        hero_defense = 5
+    elif choice == "3":
+        hero_class = "Elf"
+        hero_hp = 25
+        hero_attack = 10
+        hero_defense = 3
+    elif choice == "4":
+        hero_class = "Ranger"
+        hero_hp = 23
+        hero_attack = 11
+        hero_defense = 2
+    else:
+        print(f"{RED}Invalid choice, defaulting to Elf.{RESET}")
+        hero_class = "Elf"
+        hero_hp = 25
+        hero_attack = 10
+        hero_defense = 3
+
+def show_stats():
+    print(f"{BLUE}--- {hero_name} the {hero_class} STATS ---{RESET}")
+    print(f"{GREEN}HP: {hero_hp}{RESET}")
+    print(f"{YELLOW}Attack: {hero_attack}{RESET}")
+    print(f"{CYAN}Defense: {hero_defense}{RESET}")
+    print(f"{MAGENTA}Upgrade points: {upgrade_points}{RESET}")
+    print(f"{YELLOW}Gold: {gold}{RESET}")
+
+def upgrade_stats():
+    global hero_attack, hero_hp, hero_defense, upgrade_points
+    if upgrade_points <= 0:
+        print(f"{RED}You have no upgrade points!{RESET}")
+        return
+    print(f"{MAGENTA}You have {upgrade_points} upgrade points.{RESET}")
+    print(f"1. {GREEN}Increase HP by 5{RESET}")
+    print(f"2. {YELLOW}Increase Attack by 2{RESET}")
+    print(f"3. {CYAN}Increase Defense by 1{RESET}")
+    choice = input("Choose upgrade [1/2/3]: ")
+    if choice == "1":
+        hero_hp += 5
+        upgrade_points -= 1
+        print(f"{GREEN}HP increased!{RESET}")
+    elif choice == "2":
+        hero_attack += 2
+        upgrade_points -= 1
+        print(f"{YELLOW}Attack increased!{RESET}")
+    elif choice == "3":
+        hero_defense += 1
+        upgrade_points -= 1
+        print(f"{CYAN}Defense increased!{RESET}")
+    else:
+        print(f"{RED}Invalid choice.{RESET}")
+
+def battle():
+    global hero_hp, upgrade_points, gold
+    clear_screen()
+    # Chance for boss fight
+    if random.randint(1, 10) == 1:  # 10% chance
+        enemy = boss.copy()
+        print(f"{RED}A Boss appeared!{RESET}")
+    else:
+        enemy = random.choice(enemies).copy()
+
+    enemy_name = enemy["name"]
+    enemy_hp = enemy["hp"]
+    enemy_attack = enemy["attack"]
+    enemy_gold = enemy["gold"]
+
+    print(f"{RED}You encountered a {enemy_name}!{RESET}")
+    choice2 = input(f"{RED}Attack? Yes [1] / No [2]: {RESET}")
+    if choice2 != "1":
+        print(f"{CYAN}You run away safely!{RESET}")
+        return
+
+    while hero_hp > 0 and enemy_hp > 0:
+        # Hero attack
+        damage = random.randint(4, hero_attack)
+        print(f"{GREEN}{hero_name}{RESET} {RED}hits{RESET} {MAGENTA}{enemy_name}{RESET} for: {YELLOW}{damage}{RESET}")
+        enemy_hp -= damage
+        print(f"{MAGENTA}{enemy_name}{RESET} {CYAN}HP{RESET}: {max(enemy_hp,0)}")
+        time.sleep(1)
+
+        if enemy_hp <= 0:
+            print(f"{MAGENTA}{enemy_name} is defeated!{RESET}")
+            gold += enemy_gold
+            print(f"{YELLOW}You earned {enemy_gold} gold! Total gold: {gold}{RESET}")
+            upgrade_points += 2
+            print(f"{MAGENTA}You gained 2 upgrade points! Total: {upgrade_points}{RESET}")
+            break
+
+        # Enemy attack
+        raw_damage = random.randint(4, enemy_attack)
+        damage_taken = max(raw_damage - hero_defense, 0)
+        print(f"{MAGENTA}{enemy_name}{RESET} {RED}hits{RESET} {GREEN}{hero_name}{RESET} for: {YELLOW}{damage_taken}{RESET} (raw: {raw_damage}, reduced by defense)")
+        hero_hp -= damage_taken
+        print(f"{GREEN}{hero_name}{RESET} {CYAN}HP{RESET}: {max(hero_hp,0)}")
+        time.sleep(1)
+
+        if hero_hp <= 0:
+            print(f"{RED}{hero_name} is defeated!{RESET}")
+            break
+
+def shop():
+    global gold, hero_attack
+    clear_screen()
+    print(f"{BLUE}--- SHOP ---{RESET}")
+    print(f"{YELLOW}You have {gold} gold.{RESET}")
+    for idx, item in enumerate(shop_items):
+        print(f"{idx+1}. {item['name']} (+{item['attack']} attack) - {item['price']} gold")
+    choice = input("Choose item to buy or 0 to exit: ")
+    if choice == "0":
+        return
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(shop_items):
+            item = shop_items[idx]
+            if gold >= item['price']:
+                hero_attack += item['attack']
+                gold -= item['price']
+                print(f"{GREEN}You bought {item['name']}! Attack increased by {item['attack']}.{RESET}")
+            else:
+                print(f"{RED}Not enough gold!{RESET}")
+        else:
+            print(f"{RED}Invalid choice.{RESET}")
+    except:
+        print(f"{RED}Invalid input.{RESET}")
+
+# Game start
+clear_screen()
+print(f"{BLUE}### GAME ###{RESET}")
+
+# Load previous game
+if os.path.exists(SAVE_FILE):
+    choice = input("Load previous game? Yes [1] / No [2]: ")
+    if choice == "1" and load_game():
+        pass
+    else:
+        hero_name = input("Enter your hero's name: ")
+        choose_class()
+else:
+    hero_name = input("Enter your hero's name: ")
+    choose_class()
+
+# Main loop
+while True:
+    clear_screen()
+    print(f"{CYAN}Welcome, {hero_name} the {hero_class}! Choose your action:{RESET}")
+    print(f"{GREEN}stats{RESET} - show your stats")
+    print(f"{YELLOW}upgrade{RESET} - upgrade your hero")
+    print(f"{RED}battle{RESET} - fight a random enemy")
+    print(f"{MAGENTA}shop{RESET} - buy weapons")
+    print(f"{BLUE}save{RESET} - save your progress")
+    print(f"{RED}exit{RESET} - quit the game")
+    command = input(">> ")
+
+    if command == "stats":
+        clear_screen()
+        show_stats()
+        input("\nPress Enter to continue...")
+    elif command == "upgrade":
+        clear_screen()
+        upgrade_stats()
+        input("\nPress Enter to continue...")
+    elif command == "battle":
+        battle()
+        input("\nPress Enter to continue...")
+        if hero_hp <= 0:
+            print(f"{RED}You have been defeated! Game over.{RESET}")
+            break
+    elif command == "shop":
+        shop()
+        input("\nPress Enter to continue...")
+    elif command == "save":
+        save_game()
+        input("\nPress Enter to continue...")
+    elif command == "exit":
+        print(f"{CYAN}Goodbye!{RESET}")
+        break
+    else:
+        print(f"{RED}Unknown command!{RESET}")
+        input("\nPress Enter to continue...")
